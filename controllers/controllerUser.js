@@ -8,6 +8,17 @@ const get_all = (req, res) => {
     .then((result) => res.json())
 }
 
+const get_user_current = async (req, res) => {
+    try {
+        let data = await jwt.decode(req.token, process.env.SECRET_KEY)
+        let user = data.user
+        delete user.password
+        res.json(user)        
+    } catch (error) {
+        res.json({msg: error})
+    }   
+}
+
 const user_register = async (req, res) => {
     try {
         if(req.body.username == undefined || req.body.name == undefined || req.body.password == undefined) {
@@ -76,5 +87,6 @@ const user_search = (req, res) => {
 module.exports = {
     user_register,
     user_login,
-    user_search
+    user_search,
+    get_user_current
 }
