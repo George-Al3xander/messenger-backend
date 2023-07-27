@@ -8,10 +8,9 @@ const controllerRoom = require("../controllers/controllerRoom.js")
 
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.get('/:id', verifyToken, controllerRoom.get_user_rooms);
 
-router.post("/",verifyToken,controllerRoom.create_room)
+router.post("/:id",verifyToken,controllerRoom.create_room)
+router.delete("/:id/:roomId",verifyToken,controllerRoom.delete_room)
 
 module.exports = router;
