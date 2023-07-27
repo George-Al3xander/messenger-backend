@@ -53,28 +53,28 @@ const user_login = async (req, res) => {
     .catch((err) => res.json({err}))
 }
 
-
-
-
-// -- Verifaction before every function
-// jwt.verify(req.token, process.env.SECRET_KEY, (err, authData) => {
-//     if(err) {
-//         res.sendStatus(403)
-//     } else {
-//         const {title, text} = req.body
-//         const newPost = new Post({
-//             title,
-//             text,
-//             comments: [],
-//             publication_status: false,
-//             date: new Date()
-
-//         })
-//         newPost.save().then(() => res.sendStatus(200))
-//     }
-// }) 
+const user_search = (req, res) => {
+    const searchKey = req.query.searchKey
+    let valid = new RegExp(`${searchKey.toLowerCase()}`);
+    User.find()
+    .then((users) => {   
+        try {
+            const filtered = users.filter((user) => {   
+                return valid.test(user.username.toLowerCase()) == true 
+            })
+            const result = filtered.map((fil) => {
+            return {name: fil.name, id: fil._id, username: fil.username}
+            })
+            res.json({data: result})
+        } catch (error) {
+            res.status(400).json({msg: "Something went wrong"})
+        }
+    })
+    .catch(() => res.status(400).json({msg: "Something went wrong"}))
+}
 
 module.exports = {
     user_register,
-    user_login
+    user_login,
+    user_search
 }

@@ -14,6 +14,7 @@ router.get('/', function(req, res, next) {
 
 router.post("/", controllerUser.user_register)
 router.post("/login", controllerUser.user_login)
+router.get("/search", verifyToken,controllerUser.user_search)
 //router.post("/users", controllerUser.user_login)
 
 module.exports = router;
