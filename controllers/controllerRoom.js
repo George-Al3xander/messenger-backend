@@ -43,10 +43,28 @@ const get_user_rooms = async (req, res) => {
     await User.findById(id)
     .then(() => {
         Room.find({participants: {$elemMatch: {id}}})
-        .then((rooms) => res.json({rooms}))
+        .then((rooms) => {           
+            res.json(rooms)
+        })
         .catch((err) => res.status(404).json({msg: err}))
     })
     .catch(() => res.status(404).json({msg: "User not found!"}));    
+}
+
+const get_room = async (req, res) => {
+    const id = req.params.id; 
+    const roomId = req.params.roomId;
+
+    Room.findById(roomId)
+    .then((room) => res.json(room))
+    .catch(() => res.status(400).json({msg: "Invalid room ID"}))
+}
+
+const get_rooms_messages = (req, res) => {
+    const roomId = req.params.roomId;
+    Message.find({roomId})
+    .then((messages) => res.json(messages.reverse()))
+    .catch(() => res.status(400).json({msg: "Invalid room ID"}))
 }
 
 const delete_room = async (req, res) => {    
@@ -70,6 +88,8 @@ const get_all = (req, res) => {
 module.exports = {
     create_room,
     get_user_rooms,
-    delete_room
+    delete_room,
+    get_rooms_messages,
+    get_room
 }
 
