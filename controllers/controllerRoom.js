@@ -33,8 +33,7 @@ const create_room = async (req, res) => {
                     }
                 })                
             } catch (error) {
-                res.status(400).json({error})
-                
+                res.status(400).json({error})                
             }         
 }
 
@@ -56,14 +55,20 @@ const get_room = async (req, res) => {
     const roomId = req.params.roomId;
 
     Room.findById(roomId)
-    .then((room) => res.json(room))
+    .then((room) => {
+        if(room == null) {
+            res.status(400).json({msg: "Invalid room ID"})
+        } else {
+            res.json(room)
+        }        
+    })
     .catch(() => res.status(400).json({msg: "Invalid room ID"}))
 }
 
 const get_rooms_messages = (req, res) => {
     const roomId = req.params.roomId;
     Message.find({roomId})
-    .then((messages) => res.json(messages.reverse()))
+    .then((messages) => res.json(messages))
     .catch(() => res.status(400).json({msg: "Invalid room ID"}))
 }
 

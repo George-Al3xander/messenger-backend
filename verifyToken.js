@@ -12,7 +12,7 @@ const verifyToken = (req, res,next) => {
         //MUST BE RETURNED !!!!
         //Checks if user uses his token
         //if(tokenUser.user._id != id) {
-            //res.status(498).json({msg: "Invalid token"})
+           // res.status(498).json({msg: "Invalid token"})
         //} else {            
         jwt.verify(bearerToken, process.env.SECRET_KEY, async (err, authData) => {
                if(err) {

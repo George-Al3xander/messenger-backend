@@ -46,10 +46,11 @@ const user_login = async (req, res) => {
     .then(async (user) => {
         if(user.length != 0) {
         user = user[0];
+        delete user.password
            try {
                 if(await bcrypt.compare(req.body.password, user.password)) {
                     jwt.sign({user}, process.env.SECRET_KEY, (err, token) => {
-                        res.json({token})
+                        res.json({user,token})
                     });
                 } else {
                     res.status(401).json({msg: "Incorrect username or password"})
@@ -65,13 +66,14 @@ const user_login = async (req, res) => {
 }
 
 const user_search = (req, res) => {
-    const searchKey = req.query.searchKey
+    const searchKey = req.query.searchKey;
+    const id = req.params.id;
     let valid = new RegExp(`${searchKey.toLowerCase()}`);
     User.find()
     .then((users) => {   
         try {
-            const filtered = users.filter((user) => {   
-                return valid.test(user.username.toLowerCase()) == true 
+            const filtered = users.filter((user) => {  
+                return (valid.test(user.username.toLowerCase()) == true && user._id.toString() !== id) 
             })
             const result = filtered.map((fil) => {
             return {name: fil.name, id: fil._id, username: fil.username}
