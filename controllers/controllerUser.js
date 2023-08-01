@@ -33,7 +33,7 @@ const user_register = async (req, res) => {
                 .then(() => res.status(200).json({msg: "User saved"}))
                 .catch((err) => res.sendStatus(500));
             } else {
-                res.status(403).json({msg: "username taken"})
+                res.status(403).json({msg: "That user already exists"})
             }
         })  
     } catch (error) {
