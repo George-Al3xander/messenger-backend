@@ -20,6 +20,9 @@ const get_user_current = async (req, res) => {
 }
 
 const user_register = async (req, res) => {
+    const usernameValid = new RegExp(/^(?=(?:[0-9_]*[a-z]){3})[a-z0-9_]{5,}$/);
+    const passwordValid = new RegExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*_)(?!.*\W)(?!.* ).{8,16}$/);
+
     try {
         if(req.body.username == undefined || req.body.name == undefined || req.body.password == undefined) {
             throw "Fill all the required fields"
@@ -29,9 +32,19 @@ const user_register = async (req, res) => {
             if(dbUser.length == 0) {
                 const hashedPassword = await bcrypt.hash(req.body.password, 10)
                 const user = {...req.body, password: hashedPassword}
-                await new User(user).save()
-                .then(() => res.status(200).json({msg: "User saved"}))
-                .catch((err) => res.sendStatus(500));
+                try {
+                    if(usernameValid.test(req.body.username) == false) {
+                        throw "Username must be at least 5-characters long(no less than 3 characters of that length must be letters), no spaces, and may consist only of lowercase letters, numbers, and underscores."
+                    } 
+                    if(passwordValid.test(req.body.password) == false) {
+                        throw "Password must contain one digit from 1 to 9, one lowercase letter, one uppercase letter, one underscore but no other special character, no space and it must be 8-16 characters long."
+                    } 
+                    await new User(user).save()
+                    .then(() => res.status(200).json({msg: "User saved"}))
+                    .catch((err) => res.sendStatus(500));
+                } catch (error) {
+                    res.status(403).json({msg: error})
+                }                
             } else {
                 res.status(403).json({msg: "That user already exists"})
             }
@@ -68,13 +81,29 @@ const user_login = async (req, res) => {
 const user_search = (req, res) => {
     const searchKey = req.query.searchKey;
     const id = req.params.id;
+    const status = req.query.status;
     let valid = new RegExp(`${searchKey.toLowerCase()}`);
     User.find()
     .then((users) => {   
-        try {
-            const filtered = users.filter((user) => {  
-                return (valid.test(user.username.toLowerCase()) == true && user._id.toString() !== id) 
-            })
+        try {            
+            let filtered;
+            if(status == "full") {
+                filtered = users.filter((user) => {  
+                    return (
+                    (
+                        valid.test(user.username.toLowerCase()) == true || 
+                        valid.test(user.name.first.toLowerCase()) == true || 
+                        valid.test(user.name.last.toLowerCase()) == true ||
+                        valid.test(user.name.first.toLowerCase() + " " + user.name.last.toLowerCase()) == true
+                    ) 
+                    && user._id.toString() !== id) 
+                })
+            } else {
+                filtered = users.filter((user) => {  
+                    return (valid.test(user.username.toLowerCase()) == true && user._id.toString() !== id) 
+                })
+            }
+           
             const result = filtered.map((fil) => {
             return {name: fil.name, id: fil._id, username: fil.username}
             })
