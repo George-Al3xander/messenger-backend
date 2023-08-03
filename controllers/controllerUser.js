@@ -1,6 +1,6 @@
-const User = require("../models/modelUser.js")
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const User = require("../models/modelUser.js");
 
 
 const get_all = (req, res) => {
@@ -9,10 +9,9 @@ const get_all = (req, res) => {
 }
 
 const get_user_current = async (req, res) => {
+    const id = req.params.id;
     try {
-        let data = await jwt.decode(req.token, process.env.SECRET_KEY)
-        let user = data.user
-        delete user.password
+        let user = await User.findById(id)        
         res.json(user)        
     } catch (error) {
         res.json({msg: error})
@@ -115,9 +114,58 @@ const user_search = (req, res) => {
     .catch(() => res.status(400).json({msg: "Something went wrong"}))
 }
 
+const user_edit = (req, res) => {    
+    const id = req.params.id;
+    const usernameValid = new RegExp(/^(?=(?:[0-9_]*[a-z]){3})[a-z0-9_]{5,}$/);
+    const blankValid = new RegExp(/\S/);
+    try {              
+        User.find({username: req.body.username})
+        .then(async (dbUser) => {
+            if(dbUser.length == 0) {
+                try {
+                    if(usernameValid.test(req.body.username) == false && req.body.username != undefined) {
+                        throw "Username must be at least 5-characters long(no less than 3 characters of that length must be letters), no spaces, and may consist only of lowercase letters, numbers, and underscores."
+                    } 
+                    if(req.body.name) {                        
+                        if(req.body.name.first != undefined) {
+                            if(blankValid.test(req.body.name.first) == false ) {
+                                throw "First name cant't be a blank"
+                            }
+                        } 
+                        if(req.body.name.last != undefined) {
+                            if(blankValid.test(req.body.name.last) == false ) {
+                                throw "last name cant't be a blank"
+                            }
+                        }
+                    } 
+                    const user = await User.findById(id);
+                    User.findByIdAndUpdate(id, {
+                        username: req.body.username ? req.body.username.trim() : user.username,
+                        name: {
+                            first: (req.body.name && req.body.name.first && blankValid.test(req.body.name.first)) ? req.body.name.first.trim() : user.name.first,
+                            last: (req.body.name && req.body.name.last && blankValid.test(req.body.name.last)) ? req.body.name.last.trim() : user.name.last
+                        }
+                    })
+                    .then(() => res.status(200).json({msg: "Changes saved"}))
+                    .catch((err) => res.sendStatus(500));
+                } catch (error) {
+                    console.log(error)
+                    res.status(403).json({msg: error})
+                }                
+            } else {
+                res.status(403).json({msg: "Username already taken"})
+            }
+        })  
+    } catch (error) {
+        res.status(400).json({error})
+    }
+
+}
+
 module.exports = {
     user_register,
     user_login,
     user_search,
-    get_user_current
+    get_user_current,
+    user_edit
 }
